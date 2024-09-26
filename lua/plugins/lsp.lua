@@ -66,4 +66,22 @@ return {
 			})
 		end,
 	},
+	-- Fidget for LSP progress indicator
+	{
+		"j-hui/fidget.nvim",
+		lazy = false,
+		config = function()
+			require("fidget").setup({
+				text = {
+					spinner = "dots", -- Choose from different spinner styles
+				},
+				align = {
+					bottom = true, -- Align fidget to the bottom
+				},
+				window = {
+					blend = 0, -- Keep window opaque (adjust for transparency)
+				},
+			})
+		end,
+	},
 }
