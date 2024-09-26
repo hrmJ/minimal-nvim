@@ -1,3 +1,35 @@
+function goto_definition_filtered()
+	local params = vim.lsp.util.make_position_params()
+	vim.lsp.buf_request(0, "textDocument/definition", params, function(err, result, ctx, config)
+		if err then
+			vim.notify("Error on definition: " .. err.message, vim.log.levels.ERROR)
+			return
+		end
+		if not result or vim.tbl_isempty(result) then
+			vim.notify("Definition not found", vim.log.levels.INFO)
+			return
+		end
+		-- Filter out results from node_modules
+		local filtered_result = {}
+		for _, res in ipairs(result) do
+			local uri = res.uri or res.targetUri
+			local path = vim.uri_to_fname(uri)
+			if not string.match(path, "node_modules") then
+				table.insert(filtered_result, res)
+			end
+		end
+		if vim.tbl_isempty(filtered_result) then
+			-- If no results outside node_modules, use original result
+			filtered_result = result
+		end
+		vim.lsp.util.jump_to_location(filtered_result[1], "utf-8")
+		if #filtered_result > 1 then
+			vim.lsp.util.set_qflist(vim.lsp.util.locations_to_items(filtered_result))
+			vim.api.nvim_command("copen")
+		end
+	end)
+end
+
 -- lua/plugins/lsp.lua
 return {
 	-- Mason installer
@@ -32,7 +64,13 @@ return {
 				-- Show diagnostics on hover
 				vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
 				-- Go to definition
-				vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+				vim.api.nvim_set_keymap(
+					"n",
+					"gd",
+					"<cmd>lua goto_definition_filtered()<CR>",
+					{ noremap = true, silent = true }
+				)
+
 				-- Go to declaration
 				vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 				-- Show symbol signature information

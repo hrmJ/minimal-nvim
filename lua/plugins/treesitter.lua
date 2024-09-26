@@ -5,10 +5,13 @@ return {
 		run = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "lua", "python", "javascript" }, -- Adjust based on your languages
+				ensure_installed = { "lua", "python", "javascript", "typescript", "tsx" }, -- Adjust based on your languages
 				highlight = {
 					enable = true,
 					additional_vim_regex_highlighting = false,
+				},
+				indent = {
+					enable = true, -- Enable automatic indentation
 				},
 			})
 		end,
