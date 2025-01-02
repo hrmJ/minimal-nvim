@@ -17,21 +17,21 @@ return {
 			require("mini.pick").setup()
 			require("mini.extra").setup()
 			require("mini.indentscope").setup()
-			require("mini.surround").setup({
-				mappings = {
-					add = "ys", -- Add surrounding in Normal and Visual modes
-					delete = "ds", -- Delete surrounding
-					find = "", -- Find surrounding (to the right)
-					find_left = "", -- Find surrounding (to the left)
-					highlight = "", -- Highlight surrounding
-					replace = "cs", -- Replace surrounding
-
-					update_n_lines = "yss", -- Update `n_lines`
-
-					suffix_last = "l", -- Suffix to search with "prev" method
-					suffix_next = "n", -- Suffix to search with "next" method
-				},
-			})
+			-- require("mini.surround").setup({
+			-- 	mappings = {
+			-- 		add = "ys", -- Add surrounding in Normal and Visual modes
+			-- 		delete = "ds", -- Delete surrounding
+			-- 		find = "", -- Find surrounding (to the right)
+			-- 		find_left = "", -- Find surrounding (to the left)
+			-- 		highlight = "", -- Highlight surrounding
+			-- 		replace = "cs", -- Replace surrounding
+			--
+			-- 		update_n_lines = "yss", -- Update `n_lines`
+			--
+			-- 		suffix_last = "l", -- Suffix to search with "prev" method
+			-- 		suffix_next = "n", -- Suffix to search with "next" method
+			-- 	},
+			-- })
 
 			vim.api.nvim_set_keymap("n", "<leader>p", ":Pick ", { noremap = true, silent = true })
 		end,

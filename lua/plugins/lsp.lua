@@ -128,14 +128,24 @@ return {
 	},
 
 	{
-		"nvimdev/guard.nvim",
-		event = "BufRead", -- Load only when reading a file
+		"stevearc/conform.nvim",
+		event = "BufRead",
+		opts = {},
 		config = function()
-			local ft = require("guard.filetype")
-			ft("json,typescript,javascript,typescriptreact"):fmt("prettier")
+			require("conform").setup({
+				formatters_by_ft = {
+					lua = { "stylua" },
+					javascript = { "prettierd", "prettier", stop_after_first = true },
+					typescript = { "prettierd", "prettier", stop_after_first = true },
+					typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+				},
+			})
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				pattern = "*",
+				callback = function(args)
+					require("conform").format({ bufnr = args.buf })
+				end,
+			})
 		end,
-		dependencies = {
-			"nvimdev/guard-collection",
-		},
 	},
 }
