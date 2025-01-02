@@ -1,7 +1,7 @@
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
-		lazy = false, -- Load it immediately
+    event = "BufRead", -- Load only when reading a file
 		run = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
@@ -18,7 +18,7 @@ return {
 	},
 	{
 		"catppuccin/nvim",
-		lazy = false,
+    event = "BufRead", -- Load only when reading a file
 		priority = 1000,
 		config = function()
 			vim.g.catppuccin_flavour = "mocha" -- latte, frappe, macchiato, mocha

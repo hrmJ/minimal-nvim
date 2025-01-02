@@ -8,4 +8,14 @@ return {
 			vim.keymap.set("v", "s", ":Pounce<CR>", { noremap = true, silent = true })
 		end,
 	},
+	-- { "tpope/vim-vinegar", lazy=false } ,
+	{
+		"stevearc/oil.nvim",
+		opts = {},
+		lazy = false,
+		config = function()
+			require("oil").setup()
+			vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+		end,
+	},
 }

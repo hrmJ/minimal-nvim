@@ -16,7 +16,6 @@ vim.opt.rtp:prepend(lazypath)
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.syntax = "on"
-vim.opt.clipboard = "unnamedplus"
 vim.g.mapleader = "," -- Set the leader key to ','
 vim.opt.wrap = false
 vim.opt.expandtab = true
@@ -44,9 +43,12 @@ vim.api.nvim_create_autocmd("TermOpen", {
 })
 
 local key = vim.api.nvim_set_keymap
+key("i", ",,", "<c-o>a", { noremap = true, silent = true })
 
 -- Load plugins from the plugins.lua file
 require("lazy").setup("plugins", {
 	defaults = { lazy = true }, -- Lazy load plugins by default
 	lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json", -- Lockfile location
 })
+
+require("custom-commands")

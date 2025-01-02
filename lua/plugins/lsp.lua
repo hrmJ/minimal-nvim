@@ -35,7 +35,7 @@ return {
 	-- Mason installer
 	{
 		"williamboman/mason.nvim",
-		lazy = false,
+		event = "BufRead", -- Load only when reading a file
 		config = function()
 			require("mason").setup()
 		end,
@@ -44,7 +44,7 @@ return {
 	-- Mason LSPconfig bridge
 	{
 		"williamboman/mason-lspconfig.nvim",
-		lazy = false,
+		event = "BufRead", -- Load only when reading a file
 		config = function()
 			require("mason-lspconfig").setup({
 				ensure_installed = { "ts_ls" }, -- Automatically install the TypeScript LSP
@@ -53,6 +53,7 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
+		dependencies = { "saghen/blink.cmp" },
 		config = function()
 			-- LSP setup
 			local lspconfig = require("lspconfig")
@@ -94,6 +95,9 @@ return {
 				on_attach = on_attach,
 			})
 
+			local capabilities = require("blink.cmp").get_lsp_capabilities()
+			-- lspconfig.ts_ls.setup({ capabilities = capabilities })
+
 			-- LSP diagnostics configuration
 			vim.diagnostic.config({
 				signs = false, -- Disable signs in the gutter
@@ -107,7 +111,7 @@ return {
 	-- Fidget for LSP progress indicator
 	{
 		"j-hui/fidget.nvim",
-		lazy = false,
+		event = "BufRead", -- Load only when reading a file
 		config = function()
 			require("fidget").setup({
 				text = {
@@ -121,5 +125,17 @@ return {
 				},
 			})
 		end,
+	},
+
+	{
+		"nvimdev/guard.nvim",
+		event = "BufRead", -- Load only when reading a file
+		config = function()
+			local ft = require("guard.filetype")
+			ft("json,typescript,javascript,typescriptreact"):fmt("prettier")
+		end,
+		dependencies = {
+			"nvimdev/guard-collection",
+		},
 	},
 }
