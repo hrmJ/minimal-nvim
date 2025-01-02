@@ -95,6 +95,10 @@ return {
 				on_attach = on_attach,
 			})
 
+			lspconfig.eslint.setup({
+				on_attach = on_attach,
+			})
+
 			local capabilities = require("blink.cmp").get_lsp_capabilities()
 			-- lspconfig.ts_ls.setup({ capabilities = capabilities })
 
