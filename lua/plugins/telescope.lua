@@ -97,6 +97,8 @@ return {
 				{ noremap = true, silent = true }
 			)
 
+			vim.api.nvim_set_keymap("n", "<leader>tr", ":Telescope resume<CR><Esc>", { noremap = true, silent = true })
+
 			require("telescope").load_extension("fzf")
 		end,
 	},
@@ -108,4 +110,17 @@ return {
 	},
 
 	{ "nvim-telescope/telescope-live-grep-args.nvim" },
+
+	{
+		"startup-nvim/startup.nvim",
+		dependencies = {
+			"nvim-telescope/telescope.nvim",
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope-file-browser.nvim",
+		},
+		lazy = false,
+		config = function()
+			require("startup").setup()
+		end,
+	},
 }

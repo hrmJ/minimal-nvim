@@ -52,3 +52,6 @@ require("lazy").setup("plugins", {
 })
 
 require("custom-commands")
+
+vim.keymap.set('n', '<leader>cr', ':let @+=expand("%")<CR>', { silent = true })
+vim.keymap.set('n', '<leader>ct', ':let @+=expand("%:p")<CR>', { silent = true })

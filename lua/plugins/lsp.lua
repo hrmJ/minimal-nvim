@@ -142,6 +142,7 @@ return {
 					javascript = { "prettierd", "prettier", stop_after_first = true },
 					typescript = { "prettierd", "prettier", stop_after_first = true },
 					typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+					python = { "black" },
 				},
 			})
 			vim.api.nvim_create_autocmd("BufWritePre", {

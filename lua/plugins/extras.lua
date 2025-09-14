@@ -6,17 +6,27 @@ return {
 		lazy = false,
 		config = function()
 			local starter = require("mini.starter")
-			require("mini.starter").setup({
-				items = {
-					starter.sections.recent_files(9, true, true),
-					starter.sections.recent_files(11, false, true),
-					starter.sections.pick,
-				},
-			})
-
-			require("mini.pick").setup()
-			require("mini.extra").setup()
-			require("mini.indentscope").setup()
+			local MiniPick = require("mini.pick")
+			-- require("mini.starter").setup({
+			-- 	items = {
+			-- 		starter.sections.recent_files(9, true, true),
+			-- 		starter.sections.recent_files(11, false, true),
+			-- 		starter.sections.pick,
+			-- 	},
+			-- })
+			--
+			-- local wipeout_cur = function()
+			-- 	vim.api.nvim_buf_delete(MiniPick.get_picker_matches().current.bufnr, {})
+			-- end
+			-- local buffer_mappings = { wipeout = { char = "<C-d>", func = wipeout_cur } }
+			--
+			-- vim.keymap.set("n", "<leader>mb", function()
+			-- 	MiniPick.builtin.buffers({}, { mappings = buffer_mappings })
+			-- end, { noremap = true, silent = true })
+			--
+			-- require("mini.pick").setup({})
+			-- require("mini.extra").setup()
+			-- require("mini.indentscope").setup()
 			-- require("mini.surround").setup({
 			-- 	mappings = {
 			-- 		add = "ys", -- Add surrounding in Normal and Visual modes

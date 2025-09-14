@@ -7,12 +7,14 @@ return {
 			"rafamadriz/friendly-snippets",
 			"moyiz/blink-emoji.nvim",
 			"mikavilpas/blink-ripgrep.nvim",
+			{ "L3MON4D3/LuaSnip", version = "v2.*" },
 		},
 		version = "*",
 
 		---@module 'blink.cmp'
 		---@type blink.cmp.Config
 		opts = {
+
 			-- 'default' for mappings similar to built-in completion
 			-- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
 			-- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
