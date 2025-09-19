@@ -27,11 +27,11 @@ local function git_diff_files(opts)
 			finder = finders.new_table({
 				results = files,
 			}),
-			previewer = previewers.new_termopen_previewer {
+			previewer = previewers.new_termopen_previewer({
 				get_command = function(entry)
 					return { "git", "diff", base_branch .. "..HEAD", "--", entry.value }
-				end
-			},
+				end,
+			}),
 			attach_mappings = function(prompt_bufnr, map)
 				actions.select_default:replace(function()
 					local selection = action_state.get_selected_entry()
@@ -49,5 +49,12 @@ end
 vim.api.nvim_create_user_command("TelescopeGitDiff", function(opts)
 	git_diff_files({ base_branch = opts.args ~= "" and opts.args or nil })
 end, { nargs = "?" })
+
+vim.api.nvim_set_keymap(
+	"n",
+	"<leader>d",
+	"<cmd>TelescopeGitDiff<cr>",
+	{ noremap = true, silent = true, desc = "Telescope git diff" }
+)
 
 return git_diff_files
