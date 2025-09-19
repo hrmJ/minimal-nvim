@@ -1,0 +1,113 @@
+{
+  "desc": {
+    "prefix": "desc",
+    "body": [
+      "describe(\"${1:suitename}\", () =>{",
+      "it(\"${2:testname}\", async () =>{",
+      "    ${3://TODO}",
+      "})",
+      "})"
+    ]
+  },
+  "it": {
+    "prefix": "it",
+    "body": ["it(\"${1:testname}\", async () =>{", "    ${2://TODO}",
+      "})"]
+  },
+  "rfc": {
+    "prefix": "rfc",
+    "body": [
+      "interface Props {",
+      "  ${1:placeholder}?: string;",
+      "}",
+      "",
+      "export function ${TM_FILENAME_BASE}(props: Props) {",
+      "  return (",
+      "    <div>",
+      "      ${2:// Component content}",
+      "    </div>",
+      "  );",
+      "}"
+    ]
+  },
+  "us": {
+    "prefix": "us",
+    "body": ["const [${1:state}, set${2:State}] = useState(${3:''});"]
+  },
+  "ue": {
+    "prefix": "ue",
+    "body": [
+      "useEffect(() => {",
+      "  ${2:// Effect logic}",
+      "}, [${1:dependencies}]);"
+    ]
+  },
+  "ucb": {
+    "prefix": "ucb",
+    "body": [
+      "const ${1:memoizedCallback} = useCallback(() => {",
+      "  ${3:// Callback logic}",
+      "}, [${2:dependencies}]);"
+    ]
+  },
+  "um": {
+    "prefix": "um",
+    "body": [
+      "const ${1:memoizedValue} = useMemo(() => {",
+      "  return ${3:// Computed value};",
+      "}, [${2:dependencies}]);"
+    ]
+  },
+  "ur": {
+    "prefix": "ur",
+    "body": ["const ${1:ref} = useRef${2:<${3:HTMLDivElement}>}(${4:null});"]
+  },
+  "uc": {
+    "prefix": "uc",
+    "body": ["const ${1:context} = useContext(${2:Context});"]
+  },
+  "type": {
+    "prefix": "type",
+    "body": ["type ${1:TypeName} = ${2:string};"]
+  },
+  "int": {
+    "prefix": "int",
+    "body": [
+      "interface ${1:InterfaceName} {",
+      "  ${2:property}: ${3:string};",
+      "}"
+    ]
+  },
+  "imp": {
+    "prefix": "imp",
+    "body": ["import { ${2:export} } from '${1:module}';"]
+  },
+  "impt": {
+    "prefix": "impt",
+    "body": ["import type { ${2:Type} } from '${1:module}';"]
+  },
+  "exp": {
+    "prefix": "exp",
+    "body": ["export { ${1:export} } from '${2:module}';"]
+  },
+  "expt": {
+    "prefix": "expt",
+    "body": ["export type { ${1:Type} } from '${2:module}';"]
+  },
+  "cl": {
+    "prefix": "cl",
+    "body": ["console.log(${1:value});"]
+  },
+  "ce": {
+    "prefix": "ce",
+    "body": ["console.error(${1:error});"]
+  },
+  "af": {
+    "prefix": "af",
+    "body": ["() => {${1}}"]
+  },
+  "afr": {
+    "prefix": "afr",
+    "body": ["() => ${1:value}"]
+  }
+}

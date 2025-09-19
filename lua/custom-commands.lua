@@ -1,20 +1,53 @@
-local function diagnose_quickfix_files()
-	local qf_list = vim.fn.getqflist()
-	for _, item in ipairs(qf_list) do
-		-- Ensure the file is associated with a valid buffer
-		local bufnr = item.bufnr
-		if bufnr and bufnr > 0 then
-			-- Load the buffer if it's not already loaded
-			if not vim.api.nvim_buf_is_loaded(bufnr) then
-				vim.fn.bufload(bufnr)
-			end
-			-- Open the file to attach LSP (if not already attached)
-			vim.api.nvim_buf_call(bufnr, function()
-				vim.cmd("edit " .. vim.api.nvim_buf_get_name(bufnr))
-			end)
+local pickers = require("telescope.pickers")
+local finders = require("telescope.finders")
+local conf = require("telescope.config").values
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+local previewers = require("telescope.previewers")
+
+local function git_diff_files(opts)
+	opts = opts or {}
+	local base_branch = opts.base_branch or "origin/develop"
+
+	-- Get list of changed files
+	local cmd = string.format("git diff --name-only %s..HEAD", base_branch)
+	local handle = io.popen(cmd)
+	local files = {}
+
+	if handle then
+		for line in handle:lines() do
+			table.insert(files, line)
 		end
+		handle:close()
 	end
-	print("Loaded and attached LSP to all files in quickfix list.")
+
+	pickers
+		.new(opts, {
+			prompt_title = string.format("Git Diff Files (%s..HEAD)", base_branch),
+			finder = finders.new_table({
+				results = files,
+			}),
+			previewer = previewers.new_termopen_previewer {
+				get_command = function(entry)
+					return { "git", "diff", base_branch .. "..HEAD", "--", entry.value }
+				end
+			},
+			attach_mappings = function(prompt_bufnr, map)
+				actions.select_default:replace(function()
+					local selection = action_state.get_selected_entry()
+					actions.close(prompt_bufnr)
+					-- Just open the file normally
+					vim.cmd("edit " .. selection[1])
+				end)
+				return true
+			end,
+		})
+		:find()
 end
 
-vim.api.nvim_create_user_command("DiagnoseQuickfix", diagnose_quickfix_files, {})
+-- Create command
+vim.api.nvim_create_user_command("TelescopeGitDiff", function(opts)
+	git_diff_files({ base_branch = opts.args ~= "" and opts.args or nil })
+end, { nargs = "?" })
+
+return git_diff_files
