@@ -52,7 +52,7 @@ end, { nargs = "?" })
 
 vim.api.nvim_set_keymap(
 	"n",
-	"<leader>d",
+	"<leader>rd",
 	"<cmd>TelescopeGitDiff<cr>",
 	{ noremap = true, silent = true, desc = "Telescope git diff" }
 )
