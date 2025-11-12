@@ -1,5 +1,9 @@
 return {
-
+	{
+		"Olical/vim-enmasse",
+		version = "*",
+		lazy = false,
+	},
 	{
 		"echasnovski/mini.nvim",
 		version = "*",

@@ -29,7 +29,14 @@ local function git_diff_files(opts)
 			}),
 			previewer = previewers.new_termopen_previewer({
 				get_command = function(entry)
-					return { "git", "diff", base_branch .. "..HEAD", "--", entry.value }
+					return { "git", "diff", "--color=always", base_branch .. "..HEAD", "--", entry.value }
+				end,
+				scroll_fn = function(self, direction)
+					if not self.state or not self.state.termopen_id then
+						return
+					end
+					local input = direction > 0 and [[]] or [[]]
+					vim.api.nvim_chan_send(self.state.termopen_id, input)
 				end,
 			}),
 			attach_mappings = function(prompt_bufnr, map)
