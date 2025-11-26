@@ -207,7 +207,10 @@ function M.open()
 		M.toggle_folder(buf)
 	end, { buffer = buf })
 	vim.keymap.set("n", "d", function()
-		M.open_diff(buf)
+		M.open_diff(buf, false)
+	end, { buffer = buf })
+	vim.keymap.set("n", "D", function()
+		M.open_diff(buf, true)
 	end, { buffer = buf })
 	vim.keymap.set("n", "v", function()
 		M.open_vdiff(buf)
@@ -313,7 +316,7 @@ function M.open_file(filepath)
 	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
 end
 
-function M.open_diff(buf)
+function M.open_diff(buf, use_side)
 	local cursor = vim.api.nvim_win_get_cursor(0)
 	local line_idx = cursor[1]
 
@@ -324,9 +327,15 @@ function M.open_diff(buf)
 		-- It's a file, open diff in browser
 		local clean_path = line.path:gsub("^/", "")
 		local base_branch = "develop"
+		-- local cmd = string.format("diff2html -- %s -- %s", base_branch, vim.fn.shellescape(clean_path))
 		local cmd = string.format("diff2html -- %s -- %s", base_branch, vim.fn.shellescape(clean_path))
-
-		vim.fn.jobstart(cmd, { detach = true })
+		local cmd_side =
+			string.format("diff2html --style side -- %s  -- %s", base_branch, vim.fn.shellescape(clean_path))
+		if use_side then
+			vim.fn.jobstart(cmd_side, { detach = true })
+		else
+			vim.fn.jobstart(cmd, { detach = true })
+		end
 		vim.notify("Opening diff in browser...", vim.log.levels.INFO)
 	end
 end
