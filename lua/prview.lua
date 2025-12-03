@@ -3,7 +3,7 @@ local M = {}
 
 -- Get list of changed files with their status from git diff
 function M.get_changed_files(base_branch)
-	base_branch = base_branch or "develop"
+	base_branch = base_branch or "origin/develop"
 
 	local cmd = string.format("git diff %s --name-status", base_branch)
 	local handle = io.popen(cmd)
@@ -194,7 +194,7 @@ function M.open()
 	vim.cmd("vsplit")
 	local win = vim.api.nvim_get_current_win()
 	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_win_set_width(win, 40)
+	vim.api.nvim_win_set_width(win, 30)
 
 	-- Store tree in buffer variable
 	vim.api.nvim_buf_set_var(buf, "pr_tree", tree)
@@ -326,7 +326,7 @@ function M.open_diff(buf, use_side)
 	if line and line.status then
 		-- It's a file, open diff in browser
 		local clean_path = line.path:gsub("^/", "")
-		local base_branch = "develop"
+		local base_branch = "origin/develop"
 		-- local cmd = string.format("diff2html -- %s -- %s", base_branch, vim.fn.shellescape(clean_path))
 		local cmd = string.format("diff2html -- %s -- %s", base_branch, vim.fn.shellescape(clean_path))
 		local cmd_side =
@@ -370,6 +370,7 @@ function M.open_vdiff(buf)
 		vim.cmd("rightbelow vsplit")
 		vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
 		vim.cmd("Gvdiffsplit develop")
+		-- vim.api.nvim_win_set_width(pr_win, 30)
 	end
 end
 
@@ -382,7 +383,7 @@ function M.preview_diff(buf)
 
 	if line and line.status then
 		local clean_path = line.path:gsub("^/", "")
-		local base_branch = "develop"
+		local base_branch = "origin/develop"
 
 		-- Get the diff
 		local cmd = string.format("git diff %s -- %s", base_branch, vim.fn.shellescape(clean_path))
