@@ -3,7 +3,7 @@
     "prefix": "desc",
     "body": [
       "describe(\"${1:suitename}\", () =>{",
-      "it(\"${2:testname}\", async () =>{",
+      "it(\"${2:testname}\", () =>{",
       "    ${3://TODO}",
       "})",
       "})"
@@ -11,7 +11,7 @@
   },
   "it": {
     "prefix": "it",
-    "body": ["it(\"${1:testname}\", async () =>{", "    ${2://TODO}",
+    "body": ["it(\"${1:testname}\", () =>{", "    ${2://TODO}",
       "})"]
   },
   "rfc": {

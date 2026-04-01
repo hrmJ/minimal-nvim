@@ -72,4 +72,20 @@ return {
 			vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>")
 		end,
 	},
+	{
+		"iamcco/markdown-preview.nvim",
+		cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+		build = "cd app && npm install",
+		init = function()
+			vim.g.mkdp_filetypes = { "markdown" }
+		end,
+		ft = { "markdown" },
+	},
+	{
+		"timantipov/md-table-tidy.nvim",
+		lazy = false,
+		config = function()
+			require("md-table-tidy").setup()
+		end,
+	},
 }

@@ -41,11 +41,6 @@ return {
 						cmp.show({ providers = { "ripgrep" } })
 					end,
 				},
-				cmdline = {
-					preset = "default",
-					["<CR>"] = {},
-					["<TAB>"] = { "accept", "fallback" },
-				},
 			},
 			signature = { enabled = true },
 

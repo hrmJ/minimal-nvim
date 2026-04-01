@@ -68,6 +68,23 @@ return {
 				extensions = {
 					live_grep_args = {
 						layout_strategy = "horizontal",
+						path_display = function(opts, path)
+							local max_len = 50
+							if #path <= max_len then
+								return path
+							end
+							local parts = vim.split(path, "/")
+							if #parts <= 2 then
+								return path
+							end
+							local filename = parts[#parts]
+							local start_parts = { parts[1] }
+							if #parts > 2 then
+								table.insert(start_parts, parts[2])
+							end
+							local start = table.concat(start_parts, "/")
+							return start .. "/...../" .. filename
+						end,
 						auto_quoting = true,
 						mappings = { -- extend mappings
 							i = {
