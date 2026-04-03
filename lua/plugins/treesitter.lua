@@ -4,7 +4,7 @@ return {
 		event = "BufRead", -- Load only when reading a file
 		run = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter.configs").setup({
+			require("nvim-treesitter").setup({
 				ensure_installed = { "lua", "python", "javascript", "typescript", "tsx" }, -- Adjust based on your languages
 
 				incremental_selection = {

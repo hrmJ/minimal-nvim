@@ -1,7 +1,7 @@
 return {
 	{
 		"nvim-telescope/telescope.nvim",
-		tag = "0.1.8", -- Use the stable version
+		-- tag = "0.1.8", -- Use the stable version
 		dependencies = { "nvim-lua/plenary.nvim" }, -- Required dependency
 		event = "BufReadPost",
 
