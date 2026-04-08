@@ -93,6 +93,9 @@ return {
 				},
 			},
 		},
+		accept = {
+			auto_brackets = { enabled = false },
+		},
 		opts_extend = { "sources.default", "sources.emoji", "sources.buffer" },
 	},
 

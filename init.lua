@@ -53,5 +53,13 @@ require("lazy").setup("plugins", {
 
 require("custom-commands")
 
-vim.keymap.set('n', '<leader>cr', ':let @+=expand("%")<CR>', { silent = true })
-vim.keymap.set('n', '<leader>ct', ':let @+=expand("%:p")<CR>', { silent = true })
+vim.keymap.set("n", "<leader>cr", ':let @+=expand("%")<CR>', { silent = true })
+vim.keymap.set("n", "<leader>ct", ':let @+=expand("%:p")<CR>', { silent = true })
+
+vim.api.nvim_create_user_command("Tsc", function(opts)
+	local dir = opts.args ~= "" and opts.args or "."
+	local output = vim.fn.system("cd " .. dir .. " && npx tsc --noEmit 2>&1")
+	vim.opt.errorformat = "%f(%l\\,%c): %m"
+	vim.fn.setqflist({}, " ", { title = "tsc", lines = vim.split(output, "\n") })
+	vim.cmd.copen()
+end, { nargs = "?", complete = "dir" })
