@@ -1,3 +1,4 @@
+-- Mostly vibe-coded with AI for a quick and easy pr reading help
 local git_utils = require("prview_git")
 local M = {}
 
@@ -616,7 +617,7 @@ function M.open()
 			"    c             View comments on file",
 			"    h             Show this help",
 			"    q             Close",
-			"    <leader>bb    Bitbucket comment via browser
+			"    <leader>bb    Bitbucket comment via browser",
 			"",
 			"  File pane (after s):",
 			"    ]h         Next hunk",
