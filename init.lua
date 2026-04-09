@@ -77,3 +77,26 @@ vim.api.nvim_create_user_command("Tsc", function(opts)
 	vim.fn.setqflist(items, " ")
 	vim.cmd.copen()
 end, { nargs = "?", complete = "dir" })
+
+local bb_pr_url = nil
+vim.keymap.set("n", "<leader>bb", function()
+	local function open(pr_url)
+		local file = vim.fn.expand("%:.")
+		local line = vim.api.nvim_win_get_cursor(0)[1]
+		local encoded = file:gsub("/", "%%2F")
+		local url = string.format("%s/diff#%s?t=%d", pr_url, encoded, line)
+		vim.fn.system({ "open", url })
+	end
+
+	if bb_pr_url then
+		open(bb_pr_url)
+	else
+		vim.ui.input({ prompt = "PR URL: " }, function(input)
+			if not input or input == "" then return end
+			bb_pr_url = input:gsub("/$", "")
+			open(bb_pr_url)
+		end)
+	end
+end, { desc = "Open Bitbucket PR diff at current line" })
+
+vim.keymap.set("n", "<leader>pv", function() require("prview").open() end, { desc = "Open PR review" })

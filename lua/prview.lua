@@ -458,6 +458,7 @@ function M.open_with_signs(buf)
 	vim.api.nvim_set_current_win(pr_win)
 	vim.cmd("rightbelow vsplit")
 	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
+	vim.api.nvim_win_set_width(pr_win, math.floor(vim.o.columns * 0.3))
 
 	local file_buf = vim.api.nvim_get_current_buf()
 	local ns = vim.api.nvim_create_namespace("prview_diffsigns")
