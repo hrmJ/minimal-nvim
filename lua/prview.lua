@@ -215,6 +215,9 @@ function M.open()
 	vim.keymap.set("n", "v", function()
 		M.open_vdiff(buf)
 	end, { buffer = buf })
+	vim.keymap.set("n", "s", function()
+		M.open_with_signs(buf)
+	end, { buffer = buf })
 	vim.keymap.set("n", "p", function()
 		M.preview_diff(buf)
 	end, { buffer = buf })
@@ -434,6 +437,111 @@ function M.preview_diff(buf)
 			end,
 		})
 	end
+end
+
+function M.open_with_signs(buf)
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	local lines = vim.api.nvim_buf_get_var(buf, "pr_lines")
+	local line = lines[cursor[1]]
+	if not line or not line.status then return end
+
+	local clean_path = line.path:gsub("^/", "")
+	local base_branch = "origin/develop"
+
+	-- Close non-PR windows
+	local pr_win = vim.api.nvim_get_current_win()
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		if win ~= pr_win then pcall(vim.api.nvim_win_close, win, false) end
+	end
+
+	-- Open file in a split
+	vim.api.nvim_set_current_win(pr_win)
+	vim.cmd("rightbelow vsplit")
+	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
+
+	local file_buf = vim.api.nvim_get_current_buf()
+	local ns = vim.api.nvim_create_namespace("prview_diffsigns")
+	vim.api.nvim_buf_clear_namespace(file_buf, ns, 0, -1)
+
+	-- Get diff hunks from git
+	local cmd = string.format("git diff -U0 %s -- %s", base_branch, clean_path)
+	local diff = vim.fn.systemlist(cmd)
+
+	local hunk_starts = {}
+	for _, l in ipairs(diff) do
+		local new_start, new_count = l:match("^@@ %-[%d,]+ %+(%d+),?(%d*) @@")
+		if new_start then
+			new_start = tonumber(new_start)
+			new_count = tonumber(new_count ~= "" and new_count or "1")
+			if new_count == 0 then
+				local at = math.max(new_start, 1)
+				table.insert(hunk_starts, at)
+				pcall(vim.api.nvim_buf_set_extmark, file_buf, ns, at - 1, 0, {
+					sign_text = "▁", sign_hl_group = "DiffDelete",
+				})
+			else
+				table.insert(hunk_starts, new_start)
+				for i = new_start, new_start + new_count - 1 do
+					pcall(vim.api.nvim_buf_set_extmark, file_buf, ns, i - 1, 0, {
+						sign_text = "▎", sign_hl_group = "DiffAdd",
+					})
+				end
+			end
+		end
+	end
+
+	table.sort(hunk_starts)
+	vim.b[file_buf].prview_hunks = hunk_starts
+	vim.b[file_buf].prview_path = clean_path
+	vim.b[file_buf].prview_base = base_branch
+
+	vim.keymap.set("n", "]h", function()
+		local hunks = vim.b.prview_hunks or {}
+		local cur = vim.api.nvim_win_get_cursor(0)[1]
+		for _, lnum in ipairs(hunks) do
+			if lnum > cur then
+				vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+				return
+			end
+		end
+		vim.notify("No next hunk", vim.log.levels.INFO)
+	end, { buffer = file_buf })
+
+	vim.keymap.set("n", "[h", function()
+		local hunks = vim.b.prview_hunks or {}
+		local cur = vim.api.nvim_win_get_cursor(0)[1]
+		for i = #hunks, 1, -1 do
+			if hunks[i] < cur then
+				vim.api.nvim_win_set_cursor(0, { hunks[i], 0 })
+				return
+			end
+		end
+		vim.notify("No previous hunk", vim.log.levels.INFO)
+	end, { buffer = file_buf })
+
+	vim.keymap.set("n", "<leader>dp", function()
+		local fpath = vim.b.prview_path
+		local bbase = vim.b.prview_base
+		if not fpath then return end
+
+		local diff_lines = vim.fn.systemlist(string.format("git diff %s -- %s", bbase, fpath))
+		if #diff_lines == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
+
+		local fbuf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, diff_lines)
+		vim.bo[fbuf].filetype = "diff"
+
+		local width = math.floor(vim.o.columns * 0.8)
+		local height = math.min(#diff_lines, math.floor(vim.o.lines * 0.6))
+		vim.api.nvim_open_win(fbuf, true, {
+			relative = "editor",
+			row = math.floor((vim.o.lines - height) / 2),
+			col = math.floor((vim.o.columns - width) / 2),
+			width = width, height = height,
+			style = "minimal", border = "rounded",
+		})
+		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = fbuf })
+	end, { buffer = file_buf })
 end
 
 function M.toggle_reviewed(buf)
