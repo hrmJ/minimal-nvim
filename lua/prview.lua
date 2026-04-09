@@ -136,7 +136,9 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 	base_branch = base_branch or "origin/develop"
 
 	local diff_out = vim.fn.systemlist(string.format("git diff -U0 %s -- %s", base_branch, fpath))
-	if #diff_out == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
+	if #diff_out == 0 then
+		return vim.notify("No diff", vim.log.levels.INFO)
+	end
 
 	-- Parse all hunks
 	local hunks = {}
@@ -144,12 +146,16 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 		local os, oc, ns_val, nc = l:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@")
 		if os then
 			table.insert(hunks, {
-				old_start = tonumber(os), old_count = tonumber(oc ~= "" and oc or "1"),
-				new_start = tonumber(ns_val), new_count = tonumber(nc ~= "" and nc or "1"),
+				old_start = tonumber(os),
+				old_count = tonumber(oc ~= "" and oc or "1"),
+				new_start = tonumber(ns_val),
+				new_count = tonumber(nc ~= "" and nc or "1"),
 			})
 		end
 	end
-	if #hunks == 0 then return end
+	if #hunks == 0 then
+		return
+	end
 
 	local old_lines = vim.fn.systemlist(string.format("git show %s:%s", base_branch, fpath))
 	local new_lines = vim.fn.systemlist(string.format("git show HEAD:%s", fpath))
@@ -171,9 +177,13 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 		local new_to = math.min(#new_lines, h.new_start + h.new_count - 1 + ctx)
 
 		local left_start = #left
-		for i = old_from, old_to do left[#left + 1] = old_lines[i] or "" end
+		for i = old_from, old_to do
+			left[#left + 1] = old_lines[i] or ""
+		end
 		local right_start = #right
-		for i = new_from, new_to do right[#right + 1] = new_lines[i] or "" end
+		for i = new_from, new_to do
+			right[#right + 1] = new_lines[i] or ""
+		end
 
 		-- Track highlight ranges (0-indexed)
 		for i = 0, h.old_count - 1 do
@@ -190,9 +200,13 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 		local rcount = new_to - new_from + 1
 		local diff_count = lcount - rcount
 		if diff_count > 0 then
-			for _ = 1, diff_count do right[#right + 1] = "" end
+			for _ = 1, diff_count do
+				right[#right + 1] = ""
+			end
 		elseif diff_count < 0 then
-			for _ = 1, -diff_count do left[#left + 1] = "" end
+			for _ = 1, -diff_count do
+				left[#left + 1] = ""
+			end
 		end
 	end
 
@@ -211,12 +225,16 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 	local hl_ns_r = vim.api.nvim_create_namespace("prview_split_r")
 	for _, row in ipairs(left_hls) do
 		pcall(vim.api.nvim_buf_set_extmark, lbuf, hl_ns_l, row, 0, {
-			hl_group = "DiffDelete", hl_eol = true, end_row = row + 1,
+			hl_group = "DiffDelete",
+			hl_eol = true,
+			end_row = row + 1,
 		})
 	end
 	for _, row in ipairs(right_hls) do
 		pcall(vim.api.nvim_buf_set_extmark, rbuf, hl_ns_r, row, 0, {
-			hl_group = "DiffAdd", hl_eol = true, end_row = row + 1,
+			hl_group = "DiffAdd",
+			hl_eol = true,
+			end_row = row + 1,
 		})
 	end
 
@@ -227,17 +245,27 @@ function M.show_full_split_diff(fpath, base_branch, ft)
 	local col = math.floor((vim.o.columns - total_w) / 2)
 
 	local lwin = vim.api.nvim_open_win(lbuf, true, {
-		relative = "editor", row = row, col = col,
-		width = pane_w, height = win_h,
-		style = "minimal", border = "rounded",
-		title = " " .. base_branch .. " ", title_pos = "center",
+		relative = "editor",
+		row = row,
+		col = col,
+		width = pane_w,
+		height = win_h,
+		style = "minimal",
+		border = "rounded",
+		title = " " .. base_branch .. " ",
+		title_pos = "center",
 	})
 
 	local rwin = vim.api.nvim_open_win(rbuf, false, {
-		relative = "editor", row = row, col = col + pane_w + 1,
-		width = pane_w, height = win_h,
-		style = "minimal", border = "rounded",
-		title = " current ", title_pos = "center",
+		relative = "editor",
+		row = row,
+		col = col + pane_w + 1,
+		width = pane_w,
+		height = win_h,
+		style = "minimal",
+		border = "rounded",
+		title = " current ",
+		title_pos = "center",
 	})
 
 	-- Sync scrolling
@@ -407,11 +435,24 @@ local function render_node(node, lines, indent, path)
 				icon = "D" -- Deleted
 			end
 			local checkbox = M.reviewed[path .. "/" .. item.name] and "[✓]" or "[ ]"
-			local comment_marker = (M.comments[path .. "/" .. item.name] and #M.comments[path .. "/" .. item.name] > 0) and "💬" or ""
+			local comment_marker = (
+				M.comments[path .. "/" .. item.name] or M.comments[(path .. "/" .. item.name):gsub("^/", "")]
+			)
+					and "💬"
+				or ""
 			local magnitude = git_utils.get_change_magnitude(path .. "/" .. item.name)
 			local mag_display = magnitude ~= "" and " " .. magnitude or ""
 			table.insert(lines, {
-				text = string.rep("  ", indent) .. "  " .. checkbox .. " " .. icon .. " " .. item.name .. mag_display .. " " .. comment_marker,
+				text = string.rep("  ", indent)
+					.. "  "
+					.. checkbox
+					.. " "
+					.. icon
+					.. " "
+					.. item.name
+					.. mag_display
+					.. " "
+					.. comment_marker,
 				path = path .. "/" .. item.name,
 				status = item.status,
 			})
@@ -474,7 +515,7 @@ function M.open()
 	vim.cmd("vsplit")
 	local win = vim.api.nvim_get_current_win()
 	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_win_set_width(win, 30)
+	vim.api.nvim_win_set_width(win, math.floor(vim.o.columns * 0.26))
 
 	-- Store tree in buffer variable
 	vim.api.nvim_buf_set_var(buf, "pr_tree", tree)
@@ -497,7 +538,9 @@ function M.open()
 				local cur = item
 				while cur.children do
 					local ckeys = vim.tbl_keys(cur.children)
-					if #ckeys ~= 1 or cur.children[ckeys[1]].is_file then break end
+					if #ckeys ~= 1 or cur.children[ckeys[1]].is_file then
+						break
+					end
 					table.insert(chain, ckeys[1])
 					cur = cur.children[ckeys[1]]
 				end
@@ -562,17 +605,18 @@ function M.open()
 			"  PRview Keybindings",
 			"  ──────────────────────────────",
 			"  Tree pane:",
-			"    <CR>  Toggle folder / open file",
-			"    s     Open file with diff signs",
-			"    S     Split diff (all hunks, scrollable)",
-			"    d     Open diff in browser",
-			"    D     Open side-by-side diff in browser",
-			"    v     Open vertical diff split",
-			"    p     Preview diff in float",
-			"    r     Toggle reviewed",
-			"    c     View comments on file",
-			"    h     Show this help",
-			"    q     Close",
+			"    <CR>          Toggle folder / open file",
+			"    s             Open file with diff signs",
+			"    S             Split diff (all hunks, scrollable)",
+			"    d             Open diff in browser",
+			"    D             Open side-by-side diff in browser",
+			"    v             Open vertical diff split",
+			"    p             Preview diff in float",
+			"    r             Toggle reviewed",
+			"    c             View comments on file",
+			"    h             Show this help",
+			"    q             Close",
+			"    <leader>bb    Bitbucket comment via browser
 			"",
 			"  File pane (after s):",
 			"    ]h         Next hunk",
@@ -589,8 +633,10 @@ function M.open()
 			relative = "editor",
 			row = math.floor((vim.o.lines - #help) / 2),
 			col = math.floor((vim.o.columns - 38) / 2),
-			width = 38, height = #help,
-			style = "minimal", border = "rounded",
+			width = 38,
+			height = #help,
+			style = "minimal",
+			border = "rounded",
 		})
 		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = fbuf })
 	end, { buffer = buf })
@@ -598,8 +644,10 @@ function M.open()
 		local cursor = vim.api.nvim_win_get_cursor(0)
 		local lines = vim.api.nvim_buf_get_var(buf, "pr_lines")
 		local line = lines[cursor[1]]
-		if not line or not line.status then return end
-		local comments = M.comments[line.path]
+		if not line or not line.status then
+			return
+		end
+		local comments = M.comments[line.path] or M.comments[line.path:gsub("^/", "")]
 		if not comments or #comments == 0 then
 			return vim.notify("No comments on this file", vim.log.levels.INFO)
 		end
@@ -611,12 +659,19 @@ function M.open()
 		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, display)
 		vim.bo[fbuf].bufhidden = "wipe"
 		local width = 0
-		for _, l in ipairs(display) do width = math.max(width, #l + 2) end
+		for _, l in ipairs(display) do
+			width = math.max(width, #l + 2)
+		end
 		vim.api.nvim_open_win(fbuf, true, {
-			relative = "cursor", row = 1, col = 0,
-			width = width, height = math.min(#display, 15),
-			style = "minimal", border = "rounded",
-			title = " Comments ", title_pos = "center",
+			relative = "cursor",
+			row = 1,
+			col = 0,
+			width = width,
+			height = math.min(#display, 15),
+			style = "minimal",
+			border = "rounded",
+			title = " Comments ",
+			title_pos = "center",
 		})
 		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = fbuf })
 	end, { buffer = buf })
@@ -857,7 +912,7 @@ function M.open_with_signs(buf)
 	vim.api.nvim_set_current_win(pr_win)
 	vim.cmd("rightbelow vsplit")
 	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
-	vim.api.nvim_win_set_width(pr_win, math.floor(vim.o.columns * 0.23))
+	vim.api.nvim_win_set_width(pr_win, math.floor(vim.o.columns * 0.26))
 
 	local file_buf = vim.api.nvim_get_current_buf()
 	local ns = vim.api.nvim_create_namespace("prview_diffsigns")
@@ -1045,17 +1100,24 @@ function M.open_with_signs(buf)
 	-- Add comment on current line
 	vim.keymap.set("n", "<leader>cc", function()
 		local fpath = vim.b.prview_path
-		if not fpath then return end
+		if not fpath then
+			return
+		end
 		local lnum = vim.api.nvim_win_get_cursor(0)[1]
 		vim.ui.input({ prompt = "Comment (line " .. lnum .. "): " }, function(text)
-			if not text or text == "" then return end
-			if not M.comments[fpath] then M.comments[fpath] = {} end
+			if not text or text == "" then
+				return
+			end
+			if not M.comments[fpath] then
+				M.comments[fpath] = {}
+			end
 			table.insert(M.comments[fpath], { line = lnum, text = text })
 			M.save_state()
 			-- Show marker
 			local ns_c = vim.api.nvim_create_namespace("prview_comments")
 			vim.api.nvim_buf_set_extmark(file_buf, ns_c, lnum - 1, 0, {
-				sign_text = "💬", sign_hl_group = "DiagnosticInfo",
+				sign_text = "💬",
+				sign_hl_group = "DiagnosticInfo",
 			})
 			vim.notify("Comment added", vim.log.levels.INFO)
 		end)
@@ -1064,7 +1126,9 @@ function M.open_with_signs(buf)
 	-- View comments on current file
 	vim.keymap.set("n", "<leader>cv", function()
 		local fpath = vim.b.prview_path
-		if not fpath then return end
+		if not fpath then
+			return
+		end
 		local comments = M.comments[fpath]
 		if not comments or #comments == 0 then
 			return vim.notify("No comments", vim.log.levels.INFO)
@@ -1077,24 +1141,32 @@ function M.open_with_signs(buf)
 		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, display)
 		vim.bo[fbuf].bufhidden = "wipe"
 		local width = 0
-		for _, l in ipairs(display) do width = math.max(width, #l + 2) end
+		for _, l in ipairs(display) do
+			width = math.max(width, #l + 2)
+		end
 		local height = math.min(#display, math.floor(vim.o.lines * 0.4))
 		local float_win = vim.api.nvim_open_win(fbuf, true, {
-			relative = "cursor", row = 1, col = 0,
-			width = width, height = height,
-			style = "minimal", border = "rounded",
-			title = " Comments ", title_pos = "center",
+			relative = "cursor",
+			row = 1,
+			col = 0,
+			width = width,
+			height = height,
+			style = "minimal",
+			border = "rounded",
+			title = " Comments ",
+			title_pos = "center",
 		})
 		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = fbuf })
 	end, { buffer = file_buf })
 
 	-- Show comment markers for existing comments
-	local comments = M.comments[vim.b[file_buf].prview_path or ""]
-	if comments then
+	local comments = M.comments[clean_path] or M.comments[line.path] or {}
+	if #comments > 0 then
 		local ns_c = vim.api.nvim_create_namespace("prview_comments")
 		for _, c in ipairs(comments) do
 			pcall(vim.api.nvim_buf_set_extmark, file_buf, ns_c, c.line - 1, 0, {
-				sign_text = "💬", sign_hl_group = "DiagnosticInfo",
+				sign_text = "💬",
+				sign_hl_group = "DiagnosticInfo",
 			})
 		end
 	end
