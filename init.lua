@@ -53,13 +53,27 @@ require("lazy").setup("plugins", {
 
 require("custom-commands")
 
+vim.api.nvim_create_autocmd("BufEnter", {
+	callback = function()
+		if vim.bo.filetype == "" and vim.fn.expand("%:e") ~= "" then
+			vim.cmd("filetype detect")
+		end
+	end,
+})
+
 vim.keymap.set("n", "<leader>cr", ':let @+=expand("%")<CR>', { silent = true })
 vim.keymap.set("n", "<leader>ct", ':let @+=expand("%:p")<CR>', { silent = true })
 
 vim.api.nvim_create_user_command("Tsc", function(opts)
 	local dir = opts.args ~= "" and opts.args or "."
 	local output = vim.fn.system("cd " .. dir .. " && npx tsc --noEmit 2>&1")
-	vim.opt.errorformat = "%f(%l\\,%c): %m"
-	vim.fn.setqflist({}, " ", { title = "tsc", lines = vim.split(output, "\n") })
+	local items = {}
+	for _, line in ipairs(vim.split(output, "\n")) do
+		local file, lnum, col, msg = line:match("^(.+)%((%d+),(%d+)%):%s*(.+)$")
+		if file then
+			table.insert(items, { filename = file, lnum = tonumber(lnum), col = tonumber(col), text = msg })
+		end
+	end
+	vim.fn.setqflist(items, " ")
 	vim.cmd.copen()
 end, { nargs = "?", complete = "dir" })

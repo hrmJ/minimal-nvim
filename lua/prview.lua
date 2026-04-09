@@ -613,6 +613,123 @@ function M.open_with_signs(buf)
 			pcall(vim.api.nvim_win_close, float_win, true)
 		end, { buffer = file_buf })
 	end, { buffer = file_buf })
+
+	vim.keymap.set("n", "<leader>ds", function()
+		local fpath = vim.b.prview_path
+		local bbase = vim.b.prview_base
+		if not fpath then return end
+
+		local cur = vim.api.nvim_win_get_cursor(0)[1]
+		local diff_out = vim.fn.systemlist(string.format("git diff -U0 %s -- %s", bbase, fpath))
+		if #diff_out == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
+
+		-- Parse hunks
+		local hunks = {}
+		local current
+		for _, l in ipairs(diff_out) do
+			local os, oc, ns_val, nc = l:match("^@@ %-(%d+),?(%d*) %+(%d+),?(%d*) @@")
+			if os then
+				current = {
+					old_start = tonumber(os),
+					old_count = tonumber(oc ~= "" and oc or "1"),
+					new_start = tonumber(ns_val),
+					new_count = tonumber(nc ~= "" and nc or "1"),
+					removed = {}, added = {},
+				}
+				table.insert(hunks, current)
+			elseif current then
+				if l:match("^%-") then table.insert(current.removed, l:sub(2))
+				elseif l:match("^%+") then table.insert(current.added, l:sub(2)) end
+			end
+		end
+
+		-- Find nearest hunk
+		local best, best_dist = hunks[1], math.huge
+		for _, h in ipairs(hunks) do
+			local fin = h.new_start + h.new_count - 1
+			local dist = (cur >= h.new_start and cur <= fin) and 0
+				or math.min(math.abs(cur - h.new_start), math.abs(cur - fin))
+			if dist < best_dist then best_dist, best = dist, h end
+		end
+		if not best then return end
+
+		-- Add context: grab surrounding lines from both versions
+		local ctx = 3
+		local old_lines = vim.fn.systemlist(string.format("git show %s:%s", bbase, fpath))
+		local new_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+
+		local old_from = math.max(1, best.old_start - ctx)
+		local old_to = math.min(#old_lines, best.old_start + best.old_count - 1 + ctx)
+		local new_from = math.max(1, best.new_start - ctx)
+		local new_to = math.min(#new_lines, best.new_start + best.new_count - 1 + ctx)
+
+		local left = {}
+		for i = old_from, old_to do left[#left + 1] = old_lines[i] or "" end
+		local right = {}
+		for i = new_from, new_to do right[#right + 1] = new_lines[i] or "" end
+
+		-- Pad to equal height
+		local height = math.max(#left, #right)
+		while #left < height do left[#left + 1] = "" end
+		while #right < height do right[#right + 1] = "" end
+
+		-- Create two buffers
+		local ft = vim.bo[file_buf].filetype
+		local lbuf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_buf_set_lines(lbuf, 0, -1, false, left)
+		vim.bo[lbuf].filetype = ft
+		vim.bo[lbuf].bufhidden = "wipe"
+
+		local rbuf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_buf_set_lines(rbuf, 0, -1, false, right)
+		vim.bo[rbuf].filetype = ft
+		vim.bo[rbuf].bufhidden = "wipe"
+
+		-- Highlight changed lines
+		local hl_ns_l = vim.api.nvim_create_namespace("prview_split_l")
+		local hl_ns_r = vim.api.nvim_create_namespace("prview_split_r")
+		for i = ctx + 1, ctx + best.old_count do
+			pcall(vim.api.nvim_buf_set_extmark, lbuf, hl_ns_l, i - 1, 0, {
+				hl_group = "DiffDelete", hl_eol = true, end_row = i,
+			})
+		end
+		for i = ctx + 1, ctx + best.new_count do
+			pcall(vim.api.nvim_buf_set_extmark, rbuf, hl_ns_r, i - 1, 0, {
+				hl_group = "DiffAdd", hl_eol = true, end_row = i,
+			})
+		end
+
+		-- Window dimensions
+		local total_w = math.floor(vim.o.columns * 0.8)
+		local pane_w = math.floor((total_w - 3) / 2) -- 3 for separator + borders
+		local win_h = math.min(height, math.floor(vim.o.lines * 0.5))
+		local row = math.floor((vim.o.lines - win_h) / 2)
+		local col = math.floor((vim.o.columns - total_w) / 2)
+
+		local lwin = vim.api.nvim_open_win(lbuf, false, {
+			relative = "editor", row = row, col = col,
+			width = pane_w, height = win_h,
+			style = "minimal", border = "rounded",
+			title = " " .. bbase .. " ", title_pos = "center",
+		})
+
+		local rwin = vim.api.nvim_open_win(rbuf, false, {
+			relative = "editor", row = row, col = col + pane_w + 1,
+			width = pane_w, height = win_h,
+			style = "minimal", border = "rounded",
+			title = " current ", title_pos = "center",
+		})
+
+		-- Close both on cursor move or q
+		local function close_both()
+			pcall(vim.api.nvim_win_close, lwin, true)
+			pcall(vim.api.nvim_win_close, rwin, true)
+		end
+		vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+			buffer = file_buf, once = true, callback = close_both,
+		})
+		vim.keymap.set("n", "q", close_both, { buffer = file_buf })
+	end, { buffer = file_buf })
 end
 
 function M.toggle_reviewed(buf)
