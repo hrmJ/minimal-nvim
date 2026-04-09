@@ -525,54 +525,93 @@ function M.open_with_signs(buf)
 		if not fpath then return end
 
 		local cur = vim.api.nvim_win_get_cursor(0)[1]
-		local diff_lines = vim.fn.systemlist(string.format("git diff -U3 %s -- %s", bbase, fpath))
-		if #diff_lines == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
+		local diff_out = vim.fn.systemlist(string.format("git diff -U0 %s -- %s", bbase, fpath))
+		if #diff_out == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
 
-		-- Extract the hunk closest to cursor
+		-- Parse hunks: collect removed/added lines per hunk
 		local hunks = {}
-		local current_hunk = {}
-		local current_start, current_end
-		for _, l in ipairs(diff_lines) do
-			local ns, nc = l:match("^@@ %-[%d,]+ %+(%d+),?(%d*) @@")
-			if ns then
-				if #current_hunk > 0 then
-					table.insert(hunks, { lines = current_hunk, start = current_start, fin = current_end })
+		local current
+		for _, l in ipairs(diff_out) do
+			local ns_val, nc = l:match("^@@ %-[%d,]+ %+(%d+),?(%d*) @@")
+			if ns_val then
+				current = {
+					start = tonumber(ns_val),
+					count = tonumber(nc ~= "" and nc or "1"),
+					removed = {},
+					added = {},
+				}
+				current.fin = current.start + current.count - 1
+				table.insert(hunks, current)
+			elseif current then
+				if l:match("^%-") then
+					table.insert(current.removed, l)
+				elseif l:match("^%+") then
+					table.insert(current.added, l)
 				end
-				current_hunk = { l }
-				current_start = tonumber(ns)
-				current_end = current_start + tonumber(nc ~= "" and nc or "1") - 1
-			elseif #current_hunk > 0 then
-				table.insert(current_hunk, l)
 			end
 		end
-		if #current_hunk > 0 then
-			table.insert(hunks, { lines = current_hunk, start = current_start, fin = current_end })
-		end
 
-		-- Find hunk containing or nearest to cursor
-		local best = hunks[1]
-		local best_dist = math.huge
+		-- Find hunk nearest to cursor
+		local best, best_dist = hunks[1], math.huge
 		for _, h in ipairs(hunks) do
 			local dist = (cur >= h.start and cur <= h.fin) and 0
 				or math.min(math.abs(cur - h.start), math.abs(cur - h.fin))
-			if dist < best_dist then
-				best_dist = dist
-				best = h
-			end
+			if dist < best_dist then best_dist, best = dist, h end
 		end
+		if not best then return end
+
+		-- Build display lines: removed then added, like gitsigns
+		local preview_lines = {}
+		local hls = {}
+		for _, r in ipairs(best.removed) do
+			table.insert(preview_lines, r)
+			table.insert(hls, "GitSignsDeletePreview")
+		end
+		for _, a in ipairs(best.added) do
+			table.insert(preview_lines, a)
+			table.insert(hls, "GitSignsAddPreview")
+		end
+		if #preview_lines == 0 then return end
 
 		local fbuf = vim.api.nvim_create_buf(false, true)
-		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, best.lines)
-		vim.bo[fbuf].filetype = "diff"
+		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, preview_lines)
+		vim.bo[fbuf].bufhidden = "wipe"
 
-		local width = math.floor(vim.o.columns * 0.6)
-		local height = math.min(#best.lines, math.floor(vim.o.lines * 0.4))
-		vim.api.nvim_open_win(fbuf, true, {
+		-- Apply line highlights
+		local hl_ns = vim.api.nvim_create_namespace("prview_preview")
+		for i, hl in ipairs(hls) do
+			vim.api.nvim_buf_set_extmark(fbuf, hl_ns, i - 1, 0, {
+				hl_group = hl, hl_eol = true, end_row = i,
+			})
+		end
+
+		-- Size to content
+		local width = 0
+		for _, l in ipairs(preview_lines) do
+			width = math.max(width, vim.fn.strdisplaywidth(l) + 1)
+		end
+		width = math.min(width, math.floor(vim.o.columns * 0.8))
+		local height = math.min(#preview_lines, math.floor(vim.o.lines * 0.5))
+
+		local float_win = vim.api.nvim_open_win(fbuf, false, {
 			relative = "cursor", row = 1, col = 0,
 			width = width, height = height,
 			style = "minimal", border = "rounded",
 		})
-		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = fbuf })
+		vim.wo[float_win].signcolumn = "no"
+
+		-- Auto-close on cursor move
+		local old_cursor = vim.api.nvim_win_get_cursor(0)
+		vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+			buffer = file_buf,
+			once = true,
+			callback = function()
+				pcall(vim.api.nvim_win_close, float_win, true)
+			end,
+		})
+		vim.keymap.set("n", "q", function()
+			pcall(vim.api.nvim_win_close, float_win, true)
+		end, { buffer = file_buf })
 	end, { buffer = file_buf })
 end
 
