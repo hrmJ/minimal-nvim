@@ -524,19 +524,51 @@ function M.open_with_signs(buf)
 		local bbase = vim.b.prview_base
 		if not fpath then return end
 
-		local diff_lines = vim.fn.systemlist(string.format("git diff %s -- %s", bbase, fpath))
+		local cur = vim.api.nvim_win_get_cursor(0)[1]
+		local diff_lines = vim.fn.systemlist(string.format("git diff -U3 %s -- %s", bbase, fpath))
 		if #diff_lines == 0 then return vim.notify("No diff", vim.log.levels.INFO) end
 
+		-- Extract the hunk closest to cursor
+		local hunks = {}
+		local current_hunk = {}
+		local current_start, current_end
+		for _, l in ipairs(diff_lines) do
+			local ns, nc = l:match("^@@ %-[%d,]+ %+(%d+),?(%d*) @@")
+			if ns then
+				if #current_hunk > 0 then
+					table.insert(hunks, { lines = current_hunk, start = current_start, fin = current_end })
+				end
+				current_hunk = { l }
+				current_start = tonumber(ns)
+				current_end = current_start + tonumber(nc ~= "" and nc or "1") - 1
+			elseif #current_hunk > 0 then
+				table.insert(current_hunk, l)
+			end
+		end
+		if #current_hunk > 0 then
+			table.insert(hunks, { lines = current_hunk, start = current_start, fin = current_end })
+		end
+
+		-- Find hunk containing or nearest to cursor
+		local best = hunks[1]
+		local best_dist = math.huge
+		for _, h in ipairs(hunks) do
+			local dist = (cur >= h.start and cur <= h.fin) and 0
+				or math.min(math.abs(cur - h.start), math.abs(cur - h.fin))
+			if dist < best_dist then
+				best_dist = dist
+				best = h
+			end
+		end
+
 		local fbuf = vim.api.nvim_create_buf(false, true)
-		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, diff_lines)
+		vim.api.nvim_buf_set_lines(fbuf, 0, -1, false, best.lines)
 		vim.bo[fbuf].filetype = "diff"
 
-		local width = math.floor(vim.o.columns * 0.8)
-		local height = math.min(#diff_lines, math.floor(vim.o.lines * 0.6))
+		local width = math.floor(vim.o.columns * 0.6)
+		local height = math.min(#best.lines, math.floor(vim.o.lines * 0.4))
 		vim.api.nvim_open_win(fbuf, true, {
-			relative = "editor",
-			row = math.floor((vim.o.lines - height) / 2),
-			col = math.floor((vim.o.columns - width) / 2),
+			relative = "cursor", row = 1, col = 0,
 			width = width, height = height,
 			style = "minimal", border = "rounded",
 		})
