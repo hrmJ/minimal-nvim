@@ -52,6 +52,7 @@ require("lazy").setup("plugins", {
 })
 
 require("custom-commands")
+require("scoped-search")
 
 vim.api.nvim_create_autocmd("BufEnter", {
 	callback = function()
@@ -79,7 +80,7 @@ vim.api.nvim_create_user_command("Tsc", function(opts)
 end, { nargs = "?", complete = "dir" })
 
 local bb_pr_url = nil
-vim.keymap.set("n", "<leader>bb", function()
+vim.keymap.set("n", "<leader>B", function()
 	local function open(pr_url)
 		local file = vim.fn.expand("%:.")
 		local line = vim.api.nvim_win_get_cursor(0)[1]
@@ -92,11 +93,25 @@ vim.keymap.set("n", "<leader>bb", function()
 		open(bb_pr_url)
 	else
 		vim.ui.input({ prompt = "PR URL: " }, function(input)
-			if not input or input == "" then return end
+			if not input or input == "" then
+				return
+			end
 			bb_pr_url = input:gsub("/$", "")
 			open(bb_pr_url)
 		end)
 	end
 end, { desc = "Open Bitbucket PR diff at current line" })
 
-vim.keymap.set("n", "<leader>pv", function() require("prview").open() end, { desc = "Open PR review" })
+vim.keymap.set("n", "<leader>pv", function()
+	require("prview").open()
+end, { desc = "Open PR review" })
+
+vim.keymap.set("n", "<leader>ps", function()
+	local file = vim.fn.expand("%:.")
+	if file == "" then
+		return
+	end
+	require("prview").activate_signs(vim.api.nvim_get_current_buf(), file)
+end, { desc = "Activate PR diff signs on current file" })
+
+vim.keymap.set("n", "<leader>G", "<cmd>ScopedSearch<cr>", { desc = "Scoped search in file's dir" })

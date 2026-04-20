@@ -67,7 +67,11 @@ return {
 				},
 				extensions = {
 					live_grep_args = {
+						hidden = true,
 						layout_strategy = "horizontal",
+						additional_args = function(_)
+							return { "--hidden" }
+						end,
 						path_display = function(opts, path)
 							local max_len = 50
 							if #path <= max_len then
@@ -105,7 +109,7 @@ return {
 			vim.api.nvim_set_keymap(
 				"n",
 				"<leader>g",
-				"<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args()<cr>",
+				"<cmd>lua require('telescope').extensions.live_grep_args.live_grep_args({'--hidden'})<cr>",
 				{ noremap = true, silent = true, desc = "Telescope live grep" }
 			)
 

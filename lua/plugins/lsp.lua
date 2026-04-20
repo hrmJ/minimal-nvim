@@ -85,6 +85,10 @@ return {
 			vim.lsp.config("ts_ls", {})
 			vim.lsp.config("eslint", {})
 			vim.lsp.enable({ "ts_ls", "eslint" })
+			vim.lsp.enable("oxlint")
+			vim.lsp.config("oxlint", {
+				root_markers = { ".git" },
+			})
 		end,
 	},
 

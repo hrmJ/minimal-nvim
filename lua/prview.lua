@@ -890,32 +890,8 @@ function M.preview_diff(buf)
 	end
 end
 
-function M.open_with_signs(buf)
-	local cursor = vim.api.nvim_win_get_cursor(0)
-	local lines = vim.api.nvim_buf_get_var(buf, "pr_lines")
-	local line = lines[cursor[1]]
-	if not line or not line.status then
-		return
-	end
-
-	local clean_path = line.path:gsub("^/", "")
-	local base_branch = "origin/develop"
-
-	-- Close non-PR windows
-	local pr_win = vim.api.nvim_get_current_win()
-	for _, win in ipairs(vim.api.nvim_list_wins()) do
-		if win ~= pr_win then
-			pcall(vim.api.nvim_win_close, win, false)
-		end
-	end
-
-	-- Open file in a split
-	vim.api.nvim_set_current_win(pr_win)
-	vim.cmd("rightbelow vsplit")
-	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
-	vim.api.nvim_win_set_width(pr_win, math.floor(vim.o.columns * 0.26))
-
-	local file_buf = vim.api.nvim_get_current_buf()
+function M.activate_signs(file_buf, clean_path, base_branch)
+	base_branch = base_branch or "origin/develop"
 	local ns = vim.api.nvim_create_namespace("prview_diffsigns")
 	vim.api.nvim_buf_clear_namespace(file_buf, ns, 0, -1)
 
@@ -1161,7 +1137,7 @@ function M.open_with_signs(buf)
 	end, { buffer = file_buf })
 
 	-- Show comment markers for existing comments
-	local comments = M.comments[clean_path] or M.comments[line.path] or {}
+	local comments = M.comments[clean_path] or M.comments["/" .. clean_path] or {}
 	if #comments > 0 then
 		local ns_c = vim.api.nvim_create_namespace("prview_comments")
 		for _, c in ipairs(comments) do
@@ -1171,6 +1147,28 @@ function M.open_with_signs(buf)
 			})
 		end
 	end
+end
+
+function M.open_with_signs(buf)
+	local cursor = vim.api.nvim_win_get_cursor(0)
+	local lines = vim.api.nvim_buf_get_var(buf, "pr_lines")
+	local line = lines[cursor[1]]
+	if not line or not line.status then return end
+
+	local clean_path = line.path:gsub("^/", "")
+
+	-- Close non-PR windows
+	local pr_win = vim.api.nvim_get_current_win()
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		if win ~= pr_win then pcall(vim.api.nvim_win_close, win, false) end
+	end
+
+	vim.api.nvim_set_current_win(pr_win)
+	vim.cmd("rightbelow vsplit")
+	vim.cmd("edit " .. vim.fn.fnameescape(clean_path))
+	vim.api.nvim_win_set_width(pr_win, math.floor(vim.o.columns * 0.26))
+
+	M.activate_signs(vim.api.nvim_get_current_buf(), clean_path)
 end
 
 function M.toggle_reviewed(buf)

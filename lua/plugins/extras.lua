@@ -24,9 +24,9 @@ return {
 			-- end
 			-- local buffer_mappings = { wipeout = { char = "<C-d>", func = wipeout_cur } }
 			--
-			-- vim.keymap.set("n", "<leader>mb", function()
-			-- 	MiniPick.builtin.buffers({}, { mappings = buffer_mappings })
-			-- end, { noremap = true, silent = true })
+			vim.keymap.set("n", "<leader>mb", function()
+				MiniPick.builtin.buffers({}, { mappings = buffer_mappings })
+			end, { noremap = true, silent = true })
 			--
 			-- require("mini.pick").setup({})
 			-- require("mini.extra").setup()
