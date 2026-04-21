@@ -84,20 +84,27 @@ return {
 	{
 		"timantipov/md-table-tidy.nvim",
 		lazy = false,
+		opts = {
+			padding = 1, -- number of spaces for cell padding
+			keymap = {
+				table_tidy = "<leader>tt", -- key for command :TableTidy<CR>
+				table_tidy_all = "<leader>ta", -- key for command :TableTidyAll<CR>
+			},
+		},
 		config = function()
 			require("md-table-tidy").setup()
 		end,
-		{
-			"folke/zen-mode.nvim",
-			lazy = false,
-			config = function()
-				require("zen-mode").setup()
-			end,
-			opts = {
-				-- your configuration comes here
-				-- or leave it empty to use the default settings
-				-- refer to the configuration section below
-			},
+	},
+	{
+		"folke/zen-mode.nvim",
+		lazy = false,
+		config = function()
+			require("zen-mode").setup()
+		end,
+		opts = {
+			-- your configuration comes here
+			-- or leave it empty to use the default settings
+			-- refer to the configuration section below
 		},
 	},
 }
