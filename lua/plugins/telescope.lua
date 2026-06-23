@@ -26,6 +26,54 @@ return {
 				pickers = {
 					buffers = {
 						layout_strategy = "horizontal",
+						mappings = {
+							i = {
+								["<C-d>"] = require("telescope.actions").delete_buffer,
+								["<C-t>"] = function(prompt_bufnr)
+									local action_state = require("telescope.actions.state")
+									local actions = require("telescope.actions")
+									local entry = action_state.get_selected_entry()
+									if not entry or not entry.bufnr then
+										return
+									end
+									local filepath = vim.api.nvim_buf_get_name(entry.bufnr)
+									if filepath == "" then
+										return
+									end
+									actions.close(prompt_bufnr)
+									local dir = vim.fs.dirname(filepath)
+									local pkg = vim.fs.find("package.json", { path = dir, upward = true })[1]
+									local cwd = pkg and vim.fs.dirname(pkg) or dir
+									local pane_name = vim.fn.fnamemodify(cwd, ":t")
+									vim.fn.system({ "tmux", "split-window", "-h", "-c", cwd, "nvim", filepath })
+									vim.fn.system({ "tmux", "select-pane", "-T", pane_name })
+									vim.api.nvim_buf_delete(entry.bufnr, { force = true })
+								end,
+							},
+							n = {
+								["<C-d>"] = require("telescope.actions").delete_buffer,
+								["<C-t>"] = function(prompt_bufnr)
+									local action_state = require("telescope.actions.state")
+									local actions = require("telescope.actions")
+									local entry = action_state.get_selected_entry()
+									if not entry or not entry.bufnr then
+										return
+									end
+									local filepath = vim.api.nvim_buf_get_name(entry.bufnr)
+									if filepath == "" then
+										return
+									end
+									actions.close(prompt_bufnr)
+									local dir = vim.fs.dirname(filepath)
+									local pkg = vim.fs.find("package.json", { path = dir, upward = true })[1]
+									local cwd = pkg and vim.fs.dirname(pkg) or dir
+									local pane_name = vim.fn.fnamemodify(cwd, ":t")
+									vim.fn.system({ "tmux", "split-window", "-h", "-c", cwd, "nvim", filepath })
+									vim.fn.system({ "tmux", "select-pane", "-T", pane_name })
+									vim.api.nvim_buf_delete(entry.bufnr, { force = true })
+								end,
+							},
+						},
 						path_display = function(opts, path)
 							local max_len = 50
 							if #path <= max_len then

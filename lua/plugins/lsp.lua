@@ -82,6 +82,7 @@ return {
 			vim.lsp.config("*", {
 				capabilities = require("blink.cmp").get_lsp_capabilities(),
 			})
+			vim.lsp.config("basedpyright", {})
 			vim.lsp.config("ts_ls", {})
 			vim.lsp.config("eslint", {})
 			vim.lsp.enable({ "ts_ls", "eslint" })
@@ -122,7 +123,8 @@ return {
 					javascript = { "prettierd", "prettier", stop_after_first = true },
 					typescript = { "prettierd", "prettier", stop_after_first = true },
 					typescriptreact = { "prettierd", "prettier", stop_after_first = true },
-					python = { "black" },
+					-- python = { "black", prepend_args = { "--fast" } },
+					python = { "autopep8" },
 				},
 			})
 			vim.api.nvim_create_autocmd("BufWritePre", {

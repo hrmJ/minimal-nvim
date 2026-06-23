@@ -115,3 +115,6 @@ vim.keymap.set("n", "<leader>ps", function()
 end, { desc = "Activate PR diff signs on current file" })
 
 vim.keymap.set("n", "<leader>G", "<cmd>ScopedSearch<cr>", { desc = "Scoped search in file's dir" })
+
+require("snapshot-format")
+vim.g.snapshot_format_bin = "~/.local/bin/as_snapshot_result"
