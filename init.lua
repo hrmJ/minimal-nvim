@@ -118,3 +118,6 @@ vim.keymap.set("n", "<leader>G", "<cmd>ScopedSearch<cr>", { desc = "Scoped searc
 
 require("snapshot-format")
 vim.g.snapshot_format_bin = "~/.local/bin/as_snapshot_result"
+
+-- Make all yanks and deletes go to system clipboard as well
+vim.opt.clipboard = "unnamedplus"
