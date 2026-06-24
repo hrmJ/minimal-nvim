@@ -7,6 +7,7 @@ return {
 
 		config = function()
 			local lga_actions = require("telescope-live-grep-args.actions")
+			local utils = require("telescope-utils")
 
 			require("telescope").setup({
 				defaults = {
@@ -29,88 +30,32 @@ return {
 						mappings = {
 							i = {
 								["<C-d>"] = require("telescope.actions").delete_buffer,
-								["<C-t>"] = function(prompt_bufnr)
-									local action_state = require("telescope.actions.state")
-									local actions = require("telescope.actions")
-									local entry = action_state.get_selected_entry()
-									if not entry or not entry.bufnr then
-										return
-									end
-									local filepath = vim.api.nvim_buf_get_name(entry.bufnr)
-									if filepath == "" then
-										return
-									end
-									actions.close(prompt_bufnr)
-									local dir = vim.fs.dirname(filepath)
-									local pkg = vim.fs.find("package.json", { path = dir, upward = true })[1]
-									local cwd = pkg and vim.fs.dirname(pkg) or dir
-									local pane_name = vim.fn.fnamemodify(cwd, ":t")
-									vim.fn.system({ "tmux", "split-window", "-h", "-c", cwd, "nvim", filepath })
-									vim.fn.system({ "tmux", "select-pane", "-T", pane_name })
-									vim.api.nvim_buf_delete(entry.bufnr, { force = true })
-								end,
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
 							},
 							n = {
 								["<C-d>"] = require("telescope.actions").delete_buffer,
-								["<C-t>"] = function(prompt_bufnr)
-									local action_state = require("telescope.actions.state")
-									local actions = require("telescope.actions")
-									local entry = action_state.get_selected_entry()
-									if not entry or not entry.bufnr then
-										return
-									end
-									local filepath = vim.api.nvim_buf_get_name(entry.bufnr)
-									if filepath == "" then
-										return
-									end
-									actions.close(prompt_bufnr)
-									local dir = vim.fs.dirname(filepath)
-									local pkg = vim.fs.find("package.json", { path = dir, upward = true })[1]
-									local cwd = pkg and vim.fs.dirname(pkg) or dir
-									local pane_name = vim.fn.fnamemodify(cwd, ":t")
-									vim.fn.system({ "tmux", "split-window", "-h", "-c", cwd, "nvim", filepath })
-									vim.fn.system({ "tmux", "select-pane", "-T", pane_name })
-									vim.api.nvim_buf_delete(entry.bufnr, { force = true })
-								end,
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
 							},
 						},
-						path_display = function(opts, path)
-							local max_len = 50
-							if #path <= max_len then
-								return path
-							end
-							local parts = vim.split(path, "/")
-							if #parts <= 2 then
-								return path
-							end
-							local filename = parts[#parts]
-							local start_parts = { parts[1] }
-							if #parts > 2 then
-								table.insert(start_parts, parts[2])
-							end
-							local start = table.concat(start_parts, "/")
-							return start .. "/...../" .. filename
-						end,
+						path_display = utils.path_display,
 					},
 					git_files = {
 						layout_strategy = "horizontal",
-						path_display = function(opts, path)
-							local max_len = 50
-							if #path <= max_len then
-								return path
-							end
-							local parts = vim.split(path, "/")
-							if #parts <= 2 then
-								return path
-							end
-							local filename = parts[#parts]
-							local start_parts = { parts[1] }
-							if #parts > 2 then
-								table.insert(start_parts, parts[2])
-							end
-							local start = table.concat(start_parts, "/")
-							return start .. "/...../" .. filename
-						end,
+						mappings = {
+							i = {
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
+								["<C-w>"] = utils.open_in_tmux_win,
+							},
+							n = {
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
+								["<C-w>"] = utils.open_in_tmux_win,
+							},
+						},
+						path_display = utils.path_display,
 					},
 				},
 				extensions = {
@@ -120,28 +65,18 @@ return {
 						additional_args = function(_)
 							return { "--hidden" }
 						end,
-						path_display = function(opts, path)
-							local max_len = 50
-							if #path <= max_len then
-								return path
-							end
-							local parts = vim.split(path, "/")
-							if #parts <= 2 then
-								return path
-							end
-							local filename = parts[#parts]
-							local start_parts = { parts[1] }
-							if #parts > 2 then
-								table.insert(start_parts, parts[2])
-							end
-							local start = table.concat(start_parts, "/")
-							return start .. "/...../" .. filename
-						end,
+						path_display = utils.path_display,
 						auto_quoting = true,
-						mappings = { -- extend mappings
+						mappings = {
 							i = {
 								["<C-k>"] = lga_actions.quote_prompt(),
 								["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
+							},
+							n = {
+								["<C-t>"] = utils.open_in_tmux_pane,
+								["<C-s>"] = utils.open_in_tmux_pane_vertical,
 							},
 						},
 					},
@@ -203,6 +138,13 @@ return {
 			)
 
 			vim.api.nvim_set_keymap("n", "<leader>tr", ":Telescope resume<CR><Esc>", { noremap = true, silent = true })
+
+			vim.api.nvim_set_keymap(
+				"n",
+				"<leader>tp",
+				":lua require('telescope-tmux-panes').pick_tmux_pane()<CR>",
+				{ noremap = true, silent = true, desc = "Telescope tmux panes" }
+			)
 
 			require("telescope").load_extension("fzf")
 		end,
