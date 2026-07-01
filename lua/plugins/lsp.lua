@@ -69,14 +69,20 @@ return {
 		event = "BufRead",
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "ts_ls" },
+				ensure_installed = { "ts_ls", "jsonls" },
 			})
 		end,
 	},
 
+	-- SchemaStore for JSON schema catalog
+	{
+		"b0o/schemastore.nvim",
+		lazy = true,
+	},
+
 	{
 		"neovim/nvim-lspconfig",
-		dependencies = { "saghen/blink.cmp" },
+		dependencies = { "saghen/blink.cmp", "b0o/schemastore.nvim" },
 		event = "BufRead",
 		config = function()
 			vim.lsp.config("*", {
@@ -85,7 +91,15 @@ return {
 			vim.lsp.config("basedpyright", {})
 			vim.lsp.config("ts_ls", {})
 			vim.lsp.config("eslint", {})
-			vim.lsp.enable({ "ts_ls", "eslint" })
+			vim.lsp.config("jsonls", {
+				settings = {
+					json = {
+						schemas = require("schemastore").json.schemas(),
+						validate = { enable = true },
+					},
+				},
+			})
+			vim.lsp.enable({ "ts_ls", "eslint", "jsonls" })
 			vim.lsp.enable("oxlint")
 			vim.lsp.config("oxlint", {
 				root_markers = { ".git" },
